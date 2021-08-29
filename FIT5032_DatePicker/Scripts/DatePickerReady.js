@@ -1,4 +1,7 @@
 ﻿$(function () {
-    $(".datecontrol").datepicker(
-        {format:'yyyy--mm-dd'}    );
+    $("#datepicker").datepicker(
+        {
+            format: 'yyyy/mm/dd',
+            "setDate": new Date()
+        });
 });
