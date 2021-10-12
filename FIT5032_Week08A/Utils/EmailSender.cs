@@ -10,6 +10,8 @@ using System.Text;
 using System.Net.Mail;
 using System.Net;
 using System.Net.Mime;
+using System.IO;
+using ByteSizeLib;
 
 namespace FIT5032_Week08A.Utils
 {
@@ -18,7 +20,7 @@ namespace FIT5032_Week08A.Utils
         // Please use your API KEY here.
         private const String API_KEY = "YOUR API KEY HERE";
 
-        public void Send(String toEmail, String subject, String contents)
+        public void Send(String toEmail, String subject, String contents,HttpPostedFileBase postedFileBase)
         {
             //var client = new SendGridClient(API_KEY);
             //var from = new EmailAddress("noreply@localhost.com", "FIT5032 Example Email User");
@@ -38,46 +40,43 @@ namespace FIT5032_Week08A.Utils
             //Console.WriteLine("Sent");
             //Console.ReadLine();
 
+            if (postedFileBase!= null && postedFileBase.ContentLength > 0)
+            {
+                // extract only the fielname
+                var fileName = Path.GetFileName(postedFileBase.FileName);
+                // store the file inside ~/App_Data/uploads folder
+                string serverPath = System.Web.HttpContext.Current.Server.MapPath("~/Uploads/");
+                var path = Path.Combine(serverPath, fileName);
+                postedFileBase.SaveAs(path);
+            
+
 
             // Implementing attachment
-            String filePath = "E:/Pictures/2016-04/1.txt";
+            //String filePath = "E:/Pictures/2016-04/1.txt";
+            String filePath = path;
             System.Net.Mail.Attachment data = new System.Net.Mail.Attachment(filePath, MediaTypeNames.Application.Octet);
 
-            MailAddress to = new MailAddress(toEmail);
-            MailAddress from = new MailAddress("systemgenerated@gmail.com");
-
-            MailMessage message = new MailMessage(from, to);
-            message.Subject = subject;
-            message.Body = contents;
-            message.Attachments.Add(data);
-
-            //SmtpClient client = new SmtpClient("smtp.server.address", 2525)
-            //{
-            //    Credentials = new NetworkCredential("smtp_username", "smtp_password"),
-            //    EnableSsl = true
-            //};
-
-            // code in brackets above needed if authentication required
-
-            try
+            if (data.ContentDisposition.Size < ByteSize.FromMegaBytes(1).Bytes)
             {
-                client.Send(message);
-            }
-            catch (SmtpException ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+                MailAddress to = new MailAddress(toEmail);
+                MailAddress from = new MailAddress("systemgenerated@gmail.com");
 
+                MailMessage message = new MailMessage(from, to);
+                message.Subject = subject;
+                message.Body = contents;
+                message.Attachments.Add(data);
+                try
+                {
+                    client.Send(message);
+                }
+                catch (SmtpException ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+            }
         }
 
-    }
-
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            
-        }
     }
 
 }
